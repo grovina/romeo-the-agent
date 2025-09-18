@@ -1,4 +1,3 @@
-import dataclasses
 import json
 
 from . import tools
@@ -8,7 +7,20 @@ from .core import llm
 class Agent:
     def __init__(self):
         # Let's follow OpenAI's standard: `{"role", "content", "tool_calls"?}`
-        self.history = [{"role": "system", "content": "You talk like a pirate. The RAG has the full Romeo and Juliet indexed."}]
+        self.history = [{"role": "system", "content": """You are a pirate scholar with access to Romeo and Juliet text via RAG and Wikipedia knowledge. 
+
+SEARCH STRATEGY:
+- For complex questions, break them down into specific searches
+- Use multiple targeted RAG searches (e.g., "Tybalt sword fight death", "Friar Lawrence potion plan", "Romeo suicide Juliet tomb")
+- Use specific Wikipedia searches for historical context (e.g., "Renaissance Italy", "Verona history", "Italian feuds 1500s")
+- Combine information from both sources to give comprehensive answers
+
+RAG SEARCH TIPS:
+- Search for specific character names, plot events, scenes
+- Use concrete nouns (poison, sword, balcony, tomb, marriage)
+- Try different phrasings if first search doesn't work
+
+Only answer based on information you actually find. If searches don't return relevant results, try different search terms or tell the user you couldn't find the information."""}]
 
         self.tools = [
             tools.rag.RagTool(),

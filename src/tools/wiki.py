@@ -7,23 +7,56 @@ from . import base
 
 
 def wikipedia_search(query: str) -> dict[str, Any]:
-    """Search Wikipedia and return a page summary."""
+    """Search Wikipedia and return relevant article summaries."""
     try:
-        encoded_query = urllib.parse.quote(query)
-        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{encoded_query}"
+        # First, search for relevant articles
+        search_results = _search_wikipedia_articles(query)
+        if not search_results:
+            return {"error": "No articles found for query"}
         
-        request = urllib.request.Request(url)
-        request.add_header('User-Agent', 'Romeo-Agent/1.0 (https://github.com/example/romeo-agent)')
+        # Get the top article's summary
+        top_article = search_results[0]
+        summary = _get_article_summary(top_article['title'])
         
-        with urllib.request.urlopen(request) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            return {
-                "title": data.get("title", ""),
-                "summary": data.get("extract", ""),
-                "url": data.get("content_urls", {}).get("desktop", {}).get("page", "")
-            }
+        return {
+            "title": top_article['title'],
+            "summary": summary,
+            "url": f"https://en.wikipedia.org/wiki/{urllib.parse.quote(top_article['title'].replace(' ', '_'))}",
+            "search_results": [{"title": r['title'], "snippet": r.get('snippet', '')} for r in search_results[:3]]
+        }
     except Exception as e:
         return {"error": f"Wikipedia search failed: {str(e)}"}
+
+
+def _search_wikipedia_articles(query: str) -> list[dict]:
+    """Search for Wikipedia articles matching the query."""
+    encoded_query = urllib.parse.quote(query)
+    url = f"https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch={encoded_query}&srlimit=5"
+    
+    request = urllib.request.Request(url)
+    request.add_header('User-Agent', 'Romeo-Agent/1.0 (https://github.com/example/romeo-agent)')
+    
+    with urllib.request.urlopen(request) as response:
+        data = json.loads(response.read().decode('utf-8'))
+        return data.get('query', {}).get('search', [])
+
+
+def _get_article_summary(title: str) -> str:
+    """Get the summary/extract of a Wikipedia article."""
+    encoded_title = urllib.parse.quote(title)
+    url = f"https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&titles={encoded_title}"
+    
+    request = urllib.request.Request(url)
+    request.add_header('User-Agent', 'Romeo-Agent/1.0 (https://github.com/example/romeo-agent)')
+    
+    with urllib.request.urlopen(request) as response:
+        data = json.loads(response.read().decode('utf-8'))
+        pages = data.get('query', {}).get('pages', {})
+        
+        for page in pages.values():
+            return page.get('extract', 'No summary available.')
+        
+        return 'No summary available.'
 
 
 class WikiTool(base.Tool):
@@ -34,7 +67,7 @@ class WikiTool(base.Tool):
             "type": "function",
             "function": {
                 "name": self.name,
-                "description": "Search Wikipedia and get article summary",
+                "description": "Search Wikipedia for articles and get the most relevant summary with search results",
                 "parameters": {
                     "type": "object",
                     "properties": {

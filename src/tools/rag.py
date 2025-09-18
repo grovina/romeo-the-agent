@@ -122,7 +122,7 @@ class RagTool(base.Tool):
             "type": "function",
             "function": {
                 "name": self.name,
-                "description": "Search local docs and get relevant snippets",
+                "description": "Search the full Romeo and Juliet text for specific characters, scenes, plot events, or quotes. Use specific terms like character names, objects (poison, sword, balcony), or actions (fight, marriage, death).",
                 "parameters": {
                     "type": "object",
                     "properties": {
