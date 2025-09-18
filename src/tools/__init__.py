@@ -1,3 +1,3 @@
-from . import rag
+from . import rag, wiki
 
-__all__ = ['rag']
+__all__ = ['rag', 'wiki']

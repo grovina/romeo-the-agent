@@ -12,6 +12,7 @@ class Agent:
 
         self.tools = [
             tools.rag.RagTool(),
+            tools.wiki.WikiTool(),
         ]
         self.tools_by_name = {t.name: t for t in self.tools}
 
